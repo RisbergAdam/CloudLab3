@@ -21,15 +21,15 @@ def getTask(taskId):
     for task in celeryTasks:
         if task.taskId == int(taskId):
             return task.status() + "\n"
-    return "Task not found!\n"
+    return json.dumps(["No task found"])
 
-@app.route("/countPronouns/<container>/<objectName>")
+@app.route("/countInObject/<container>/<objectName>")
 def countPronounsInObject(container, objectName):
     connection = swiftclient.client.Connection(auth_version=2, **config)
-    return str(cPickle.loads(countPronounsSwift.delay(container, objectName, connection).get()))
+    return startTask(container, objectName, connection) + "\n"
 
 
-@app.route("/countSpecific/<container>", methods=["POST"])
+@app.route("/countInObjects/<container>", methods=["POST"])
 def countSpecific(container):
     objectList = request.form["objects"].split(",")
     connection = swiftclient.client.Connection(auth_version=2, **config)
@@ -49,7 +49,6 @@ def countPronouns(container):
 def startTask(container, objectList, connection):
     tasks = []
 
-    #for i, o in enumerate(objectList):
     for o in objectList:
         task = countPronounsSwift.delay(container, o, connection)
         tasks.append(task)
