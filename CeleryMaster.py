@@ -1,8 +1,11 @@
 from flask import Flask, request
-from CeleryWorker import countPronounsSwift
+from CeleryWorker import countPronounsSwift, countPronounsSingle
+from CeleryTask import CeleryTask
 import os
 import swiftclient.client
 import json
+import cPickle
+import time
 
 config = {'user':os.environ['OS_USERNAME'], 
           'key':os.environ['OS_PASSWORD'],
@@ -11,15 +14,51 @@ config = {'user':os.environ['OS_USERNAME'],
 
 app = Flask(__name__)
 
+celeryTasks = []
+
+@app.route("/task/<taskId>")
+def getTask(taskId):
+    for task in celeryTasks:
+        if task.taskId == int(taskId):
+            return task.status() + "\n"
+    return "Task not found!\n"
 
 @app.route("/countPronouns/<container>/<objectName>")
 def countPronounsInObject(container, objectName):
-#    container = request.form["container"]
-#    objectName = request.form["object"]
+    connection = swiftclient.client.Connection(auth_version=2, **config)
+    return str(cPickle.loads(countPronounsSwift.delay(container, objectName, connection).get()))
 
+
+@app.route("/countSpecific/<container>", methods=["POST"])
+def countSpecific(container):
+    objectList = request.form["objects"].split(",")
     connection = swiftclient.client.Connection(auth_version=2, **config)
 
-    return countPronounsSwift.delay(container, objectName, connection).get() + "\n"
+    return startTask(container, objectList, connection) + "\n"
+
+
+@app.route("/countAll/<container>")
+def countPronouns(container):
+    connection = swiftclient.client.Connection(auth_version=2, **config)
+
+    resonse, objectList = connection.get_container(container)
+
+    return startTask(container, objectList, connection) + "\n"
+
+
+def startTask(container, objectList, connection):
+    tasks = []
+
+    #for i, o in enumerate(objectList):
+    for o in objectList:
+        task = countPronounsSwift.delay(container, o, connection)
+        tasks.append(task)
+
+    celeryTask = CeleryTask(len(celeryTasks), tasks)
+    celeryTasks.append(celeryTask)
+
+    return celeryTask.status()
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
