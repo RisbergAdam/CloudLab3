@@ -26,7 +26,7 @@ def getTask(taskId):
 @app.route("/countInObject/<container>/<objectName>")
 def countPronounsInObject(container, objectName):
     connection = swiftclient.client.Connection(auth_version=2, **config)
-    return startTask(container, objectName, connection) + "\n"
+    return startTask(container, [objectName], connection) + "\n"
 
 
 @app.route("/countInObjects/<container>", methods=["POST"])
@@ -42,6 +42,7 @@ def countPronouns(container):
     connection = swiftclient.client.Connection(auth_version=2, **config)
 
     resonse, objectList = connection.get_container(container)
+    objectList = map(lambda x: x["name"], objectList)
 
     return startTask(container, objectList, connection) + "\n"
 
