@@ -12,7 +12,6 @@ class CeleryTask:
 
     def status(self):
         for i, (task, state) in enumerate(self.workerTasks):
-            print task.state
             if task.ready():
                 self.workerTasks[i] = (task, False)
                 p = cPickle.loads(task.get())
