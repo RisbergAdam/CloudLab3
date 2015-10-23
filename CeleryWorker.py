@@ -23,15 +23,18 @@ def countPronounsSingle(tweetText):
 
 def countPronouns(obj):
     pronouns = {"han": 0 , "hon": 0, "den": 0, "det": 0, "denna": 0, "denne": 0, "hen": 0}
+    uniqueTweets = 0
 
     for tweet in obj:
         #tweetText = json.loads(tweet)["text"]
         jTweet = json.loads(tweet)
         if "retweeted_status" in jTweet.keys(): continue
         tweetText = jTweet["text"]
+        uniqueTweets += 1
         for pronoun, c in pronouns.items():
             pCount = count(tweetText, pronoun)
             pronouns[pronoun] = c + pCount
+    pronouns["uniqueTweets"] = uniqueTweets
     return pronouns
     
 def count(text, word):
