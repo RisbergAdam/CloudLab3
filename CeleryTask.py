@@ -7,7 +7,7 @@ class CeleryTask:
         self.taskId = taskId
         self.workerTasks = map(lambda x: (x, True), workerTasks)
         self.taskCount = len(workerTasks)
-        self.pronouns = {"han": 0 , "hon": 0, "den": 0, "det": 0, "denna": 0, "denne": 0, "hen": 0}
+        self.pronouns = {"han": 0 , "hon": 0, "den": 0, "det": 0, "denna": 0, "denne": 0, "hen": 0, "uniqueTweets": 0}
         print self.taskCount
 
     def status(self):

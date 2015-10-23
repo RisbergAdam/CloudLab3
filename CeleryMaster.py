@@ -51,6 +51,7 @@ def startTask(container, objectList, connection):
     tasks = []
 
     for o in objectList:
+        print "task on: " + container + "/" + o
         task = countPronounsSwift.delay(container, o, connection)
         tasks.append(task)
 
